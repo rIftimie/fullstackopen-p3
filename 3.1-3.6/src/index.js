@@ -1,5 +1,6 @@
 import express from "express";
 import bodyParser from "body-parser";
+import morgan from "morgan";
 
 let data = [
     {
@@ -24,8 +25,13 @@ let data = [
     },
 ];
 const app = express();
-const port = 3001;
 app.use(bodyParser.json());
+const port = 3001;
+
+morgan.token("body", function (req, res) {
+    return JSON.stringify(req.body);
+});
+app.use(morgan(":method" + " :body "));
 
 // GET: All Data
 app.get("/api/persons", (req, res) => {
@@ -78,4 +84,6 @@ app.get("/info", (req, res) => {
     );
 });
 
-app.listen(port);
+app.listen(port, () => {
+    console.log("Server listening on port " + port);
+});
