@@ -1,4 +1,4 @@
-const endPoint = "http://localhost:3001/api/persons/";
+const endPoint = "http://localhost:3001/api/persons";
 
 export async function getAll() {
     const response = await fetch(endPoint);
@@ -10,7 +10,7 @@ export async function getAll() {
 }
 
 export async function newEntry(entry) {
-    const response = await fetch(`${endPoint}new`, {
+    const response = await fetch(`${endPoint}/new`, {
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
@@ -25,30 +25,30 @@ export async function newEntry(entry) {
     }
 }
 
-// export async function updatePerson(person) {
-//     const response = await fetch(`${endPoint}edit/${person.id}`, {
-//         headers: {
-//             Accept: "application/json",
-//             "Content-Type": "application/json",
-//         },
-//         method: "PUT",
-//         body: JSON.stringify(person),
-//     });
+export async function deleteById(id) {
+    const response = await fetch(`${endPoint}/delete/${id}`, {
+        method: "DELETE",
+    });
+    if (!response.ok) {
+        throw new Error(response.statusText);
+    } else {
+        return response.status;
+    }
+}
 
-//     if (!response.ok) {
-//         throw new Error(response.statusText);
-//     } else {
-//         return response.status;
-//     }
-// }
+export async function updateEntry(person) {
+    const response = await fetch(`${endPoint}/edit/${person._id}`, {
+        headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+        },
+        method: "PUT",
+        body: JSON.stringify(person),
+    });
 
-// export async function deleteById(id) {
-//     const response = await fetch(`${endPoint}delete/${id}`, {
-//         method: "DELETE",
-//     });
-//     if (!response.ok) {
-//         throw new Error(response.statusText);
-//     } else {
-//         return response.status;
-//     }
-// }
+    if (!response.ok) {
+        throw new Error(response.statusText);
+    } else {
+        return response.status;
+    }
+}

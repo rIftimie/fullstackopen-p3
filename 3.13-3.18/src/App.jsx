@@ -1,16 +1,12 @@
+import mongoose from "mongoose";
 import { useEffect } from "react";
 import { useState } from "react";
 import "./App.css";
 import Filter from "./components/Filter";
 import Notification from "./components/Notification";
 import PersonForm from "./components/PersonForm";
-import Persons from "./components/Persons";
-import {
-    getAll,
-    newEntry,
-    deleteById,
-    updatePerson,
-} from "./services/fetch.js";
+import EntryContainer from "./components/EntryContainer";
+import { getAll, newEntry, deleteById, updateEntry } from "./services/fetch.js";
 
 function App() {
     const [persons, setPersons] = useState([]);
@@ -20,6 +16,15 @@ function App() {
     const [notification, setNotification] = useState(null);
 
     let personsToShow = [...persons];
+
+    // Get All Data from the database.
+    useEffect(() => {
+        async function fetchData() {
+            const allPersons = await getAll();
+            setPersons(allPersons);
+        }
+        fetchData();
+    }, []);
 
     if (filter) {
         personsToShow = persons.filter((person) =>
@@ -36,16 +41,19 @@ function App() {
     function handleFilter(e) {
         setFilter(e.target.value);
     }
+
+    // Deletes Entry
     async function handleDelete(id) {
         if (window.confirm("Do you really want to delete this item?")) {
             await deleteById(id);
             setPersons(
-                persons.filter((person) => (person.id !== id ? person : null))
+                persons.filter((person) => (person._id !== id ? person : null))
             );
 
             const deletedPerson = persons.filter(
-                (person) => person.id === id
+                (person) => person._id === id
             )[0];
+
             setNotification(deletedPerson.name + " deleted");
             setTimeout(() => {
                 setNotification(null);
@@ -53,7 +61,8 @@ function App() {
         }
     }
 
-    function handleNewEntry(e) {
+    // Form on Submit
+    function handleSubmit(e) {
         e.preventDefault();
         const names = persons.map((person) => person.name);
 
@@ -62,7 +71,7 @@ function App() {
                 if (
                     window.confirm(
                         newName +
-                            " is already added to the phonebook. Replace the old number with a new one?"
+                            " is already in the phonebook. Replace the old number with a new one?"
                     )
                 ) {
                     const updatedPerson = {
@@ -72,7 +81,7 @@ function App() {
                         number: newNumber,
                     };
                     try {
-                        updatePerson(updatedPerson);
+                        updateEntry(updatedPerson);
                         setPersons(
                             persons.map((person) => {
                                 if (person.name === newName) {
@@ -81,15 +90,15 @@ function App() {
                                 return person;
                             })
                         );
-                        setNotification("Updated number for " + newName);
+                        // Sends Notification : Successfull
+                        setNotification(`Updated number for ${newName}`);
                         setTimeout(() => {
                             setNotification(null);
                         }, 5000);
                     } catch {
+                        // Sends Notification : Error
                         setNotification(
-                            "Cannot update " +
-                                updatedPerson.name +
-                                ", person doesnt exist."
+                            `Cannot update ${updatedPerson.name}, person doesnt exist.`
                         );
                         setTimeout(() => {
                             setNotification(null);
@@ -97,12 +106,24 @@ function App() {
                     }
                 }
             } else {
-                newEntry({ name: newName, number: newNumber });
+                // Creates new Id from mongoose.
+                const newId = new mongoose.Types.ObjectId();
+                // Save entry server-side.
+                newEntry({
+                    name: newName,
+                    number: newNumber,
+                    _id: newId,
+                });
+                // Save entry client-side.
                 setPersons(
-                    persons.concat({ name: newName, number: newNumber })
+                    persons.concat({
+                        name: newName,
+                        number: newNumber,
+                        _id: newId,
+                    })
                 );
-
-                setNotification("New person " + newName + " added");
+                // Send Notification.
+                setNotification(`New person ${newName} added`);
                 setTimeout(() => {
                     setNotification(null);
                 }, 5000);
@@ -112,25 +133,21 @@ function App() {
         }
     }
 
-    useEffect(() => {
-        return async () => {
-            const allPersons = await getAll();
-            setPersons(allPersons);
-        };
-    }, []);
-
     return (
         <main>
             <h2>Phonebook</h2>
             {notification && <Notification message={notification} />}
             <Filter handleFilter={handleFilter} />
             <PersonForm
-                handleNewEntry={handleNewEntry}
+                handleSubmit={handleSubmit}
                 handleNewName={handleNewName}
                 handleNewNumber={handleNewNumber}
             />
             {persons && (
-                <Persons persons={personsToShow} handleDelete={handleDelete} />
+                <EntryContainer
+                    persons={personsToShow}
+                    handleDelete={handleDelete}
+                />
             )}
         </main>
     );
