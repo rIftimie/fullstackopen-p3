@@ -18,6 +18,6 @@ Defined the error handler into middleware.
 
 Also added the primary function to edit an entry with the `findOneAndUpdate` function.
 
-# Exercise 3.18: Phonebook database Step5
+# Exercise 3.18: Phonebook database Step6
 
 Added a unique url for every phonebook based on the id.
